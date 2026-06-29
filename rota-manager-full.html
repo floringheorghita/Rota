@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rota Manager</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f4;color:#1a1a1a;min-height:100vh;font-size:14px}
+.topbar{background:#fff;border-bottom:1px solid #e5e5e3;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:20;gap:12px}
+.topbar-title{font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px;color:#1a1a1a;white-space:nowrap}
+.topbar-title i{font-size:18px;color:#5f5e5a}
+.save-ind{font-size:12px;color:#888780;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.main{max-width:1100px;margin:0 auto;padding:1.5rem}
+h2{font-size:18px;font-weight:500;margin-bottom:1rem}
+h3{font-size:15px;font-weight:500;margin-bottom:.75rem}
+.panel{background:#fff;border:1px solid #e5e5e3;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+label{font-size:13px;color:#5f5e5a;display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=number],input[type=time],select,textarea{height:36px;border-radius:8px;border:1px solid #d3d1c7;background:#fff;color:#1a1a1a;font-size:14px;padding:0 10px;font-family:inherit}
+textarea{height:auto;padding:8px 10px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#888780;box-shadow:0 0 0 2px rgba(136,135,128,.15)}
+input[type=text]{width:160px}input[type=date]{width:150px}input[type=number]{width:80px}input[type=time]{width:110px}select{min-width:140px}
+.btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid #d3d1c7;background:#fff;color:#1a1a1a;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:background .12s}
+.btn:hover{background:#f1efe8}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary:hover{background:#333;border-color:#333}
+.btn-sm{height:28px;padding:0 10px;font-size:12px}
+.btn-danger{color:#a32d2d;border-color:#f7c1c1}.btn-danger:hover{background:#fcebeb}
+.btn-success{color:#27500a;border-color:#c0dd97}.btn-success:hover{background:#eaf3de}
+.tabs{display:flex;gap:0;margin-bottom:1rem;border-bottom:1px solid #e5e5e3;overflow-x:auto}
+.tab{padding:10px 14px;font-size:13px;cursor:pointer;color:#5f5e5a;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab:hover{color:#1a1a1a}
+.tab.active{color:#1a1a1a;font-weight:500;border-bottom-color:#1a1a1a}
+.section{display:none}.section.active{display:block}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.b-early{background:#E1F5EE;color:#085041}
+.b-day{background:#E6F1FB;color:#0C447C}
+.b-late{background:#FAEEDA;color:#633806}
+.b-night{background:#EEEDFE;color:#3C3489}
+.b-day12{background:#CEEBFC;color:#044566}
+.b-night12{background:#D8D5F8;color:#2D2880}
+.b-off{background:#F1EFE8;color:#5F5E5A}
+.b-holiday{background:#FBEAF0;color:#72243E}
+.b-bh{background:#FCEBEB;color:#791F1F}
+.b-overtime{background:#EAF3DE;color:#27500A}
+.b-toil{background:#E6F1FB;color:#0C447C}
+.b-pending{background:#FAEEDA;color:#633806}
+.b-approved{background:#EAF3DE;color:#27500A}
+.b-cancelled{background:#F1EFE8;color:#5F5E5A}
+
+/* ---- WEEK ROTA TABLE ---- */
+.rota-wrap{overflow-x:auto}
+.rota-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.rota-tbl th{font-weight:500;color:#5f5e5a;font-size:12px;padding:8px 6px;text-align:center;border-bottom:1px solid #e5e5e3;white-space:nowrap}
+.rota-tbl th:first-child{text-align:left;min-width:150px;padding-left:12px}
+.rota-tbl td{padding:7px 5px;border-bottom:1px solid #e5e5e3;text-align:center;vertical-align:middle}
+.rota-tbl td:first-child{text-align:left;padding-left:12px}
+.rota-tbl tr:last-child td{border-bottom:none}
+.dcell{cursor:pointer;border-radius:6px;padding:3px}
+.dcell:hover{background:#f5f5f4}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0}
+.person-cell{display:flex;align-items:center;gap:8px}
+.week-nav{display:flex;align-items:center;gap:10px}
+.wlabel{font-size:14px;font-weight:500;min-width:180px;text-align:center}
+
+/* ---- CALENDAR ---- */
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px}
+.cal-header-cell{text-align:center;font-size:12px;font-weight:500;color:#5f5e5a;padding:6px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{min-height:90px;background:#fff;border:1px solid #e5e5e3;border-radius:6px;padding:5px;cursor:pointer;transition:border-color .12s;position:relative}
+.cal-day:hover{border-color:#888780}
+.cal-day.other-month{background:#fafaf8;opacity:.6}
+.cal-day.today{border-color:#1a1a1a;border-width:2px}
+.cal-day.is-bh{background:#fff8f8}
+.cal-day-num{font-size:12px;font-weight:500;color:#1a1a1a;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center}
+.cal-day-num.other-month-num{color:#b4b2a9}
+.cal-bh-label{font-size:9px;color:#a32d2d;font-weight:500;line-height:1.2;margin-bottom:2px}
+.cal-badges{display:flex;flex-direction:column;gap:2px}
+.cal-badge{font-size:9px;padding:1px 5px;border-radius:10px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+.cal-month-label{font-size:15px;font-weight:500;min-width:150px}
+.cal-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+
+/* ---- PEOPLE / OTHER PANELS ---- */
+.list-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e5e3;gap:8px}
+.list-row:last-child{border-bottom:none}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#5f5e5a}
+.progress-bar{width:110px;height:6px;background:#e5e5e3;border-radius:4px;overflow:hidden;flex-shrink:0}
+.progress-fill{height:100%;border-radius:4px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:1rem}
+.stat{background:#f5f5f4;border-radius:8px;padding:.75rem 1rem}
+.stat-label{font-size:12px;color:#5f5e5a;margin-bottom:4px}
+.stat-val{font-size:15px;font-weight:500;line-height:1.4}
+.day-chip{padding:4px 10px;border-radius:20px;font-size:12px;border:1px solid #d3d1c7;cursor:pointer;user-select:none;color:#5f5e5a;background:#fff}
+.day-chip.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.time-pair{display:flex;gap:6px;align-items:flex-end}
+.bh-date-txt{color:#a32d2d;font-size:12px}
+
+/* ---- SHIFT PATTERN BUILDER ---- */
+.pat-card{background:#f8f8f6;border:1px solid #e5e5e3;border-radius:8px;padding:1rem;margin-bottom:.75rem}
+.pat-card-title{font-size:13px;font-weight:500;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between}
+.rotation-strip{display:flex;gap:4px;flex-wrap:wrap;margin-top:.75rem}
+.rday{display:flex;flex-direction:column;align-items:center;gap:3px}
+.rday-label{font-size:10px;color:#888780}
+.rday-block{width:38px;height:32px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500}
+
+/* ---- MODAL ---- */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;border:1px solid #e5e5e3;padding:1.5rem;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.12);max-height:90vh;overflow-y:auto}
+.modal h3{margin-bottom:1rem}
+.fg{margin-bottom:.75rem}
+.fg label{margin-bottom:4px}
+
+/* ---- EMPTY STATE ---- */
+.empty{color:#888780;font-size:14px;text-align:center;padding:2rem 0}
+
+@media(max-width:700px){
+  .main{padding:1rem .75rem}
+  .rota-tbl th:first-child{min-width:110px}
+  .cal-day{min-height:60px}
+  .cal-badges .cal-badge:nth-child(n+3){display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title"><i class="ti ti-calendar-event"></i> Rota manager</div>
+  <div class="save-ind"><i class="ti ti-device-floppy"></i> <span id="save-text">All changes saved</span></div>
+</div>
+
+<div class="main">
+<div class="tabs">
+  <div class="tab active" onclick="sw('cal')"><i class="ti ti-calendar-month"></i> Calendar</div>
+  <div class="tab" onclick="sw('rota')"><i class="ti ti-layout-grid"></i> Week view</div>
+  <div class="tab" onclick="sw('people')"><i class="ti ti-users"></i> People</div>
+  <div class="tab" onclick="sw('shifts')"><i class="ti ti-clock"></i> Shift patterns</div>
+  <div class="tab" onclick="sw('holidays')"><i class="ti ti-beach"></i> Holidays</div>
+  <div class="tab" onclick="sw('bh')"><i class="ti ti-flag"></i> Bank holidays</div>
+  <div class="tab" onclick="sw('ot')"><i class="ti ti-clock-plus"></i> Overtime &amp; TOIL</div>
+</div>
+
+<!-- CALENDAR -->
+<div id="tab-cal" class="section active">
+  <div class="panel" style="padding:.75rem 1.25rem">
+    <div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+      <div class="cal-nav" style="margin-bottom:0">
+        <button class="btn btn-sm" onclick="calPrev()"><i class="ti ti-chevron-left"></i></button>
+        <span class="cal-month-label" id="cal-month-label"></span>
+        <button class="btn btn-sm" onclick="calNext()"><i class="ti ti-chevron-right"></i></button>
+        <button class="btn btn-sm" onclick="calToday()">Today</button>
+      </div>
+      <div>
+        <label style="margin-bottom:4px;display:block">Filter person</label>
+        <select id="cal-filter" onchange="renderCal()" style="min-width:140px">
+          <option value="all">All people</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="padding:.75rem">
+    <div class="cal-header" id="cal-header"></div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+  <div class="cal-legend">
+    <span class="legend-item"><span class="badge b-early">E</span> Early</span>
+    <span class="legend-item"><span class="badge b-day">D</span> Day</span>
+    <span class="legend-item"><span class="badge b-late">L</span> Late</span>
+    <span class="legend-item"><span class="badge b-night">N</span> Night</span>
+    <span class="legend-item"><span class="badge b-day12">D12</span> Day 12h</span>
+    <span class="legend-item"><span class="badge b-night12">N12</span> Night 12h</span>
+    <span class="legend-item"><span class="badge b-off">Off</span></span>
+    <span class="legend-item"><span class="badge b-holiday">Hol</span></span>
+    <span class="legend-item"><span class="badge b-bh">BH</span></span>
+    <span class="legend-item"><span class="badge b-overtime">OT</span></span>
+    <span class="legend-item"><span class="badge b-toil">TOIL</span></span>
+  </div>
+</div>
+
+<!-- WEEK VIEW -->
+<div id="tab-rota" class="section">
+  <div class="panel" style="padding:.75rem 1.25rem">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div class="week-nav">
+        <button class="btn btn-sm" onclick="cw(-1)"><i class="ti ti-chevron-left"></i></button>
+        <span class="wlabel" id="wlabel"></span>
+        <button class="btn btn-sm" onclick="cw(1)"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <button class="btn btn-sm" onclick="cw(0,true)">Today</button>
+    </div>
+  </div>
+  <div class="panel rota-wrap" style="padding:.75rem .5rem">
+    <div id="rota-grid"></div>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="badge b-early">Early</span></span>
+    <span class="legend-item"><span class="badge b-day">Day</span></span>
+    <span class="legend-item"><span class="badge b-late">Late</span></span>
+    <span class="legend-item"><span class="badge b-night">Night</span></span>
+    <span class="legend-item"><span class="badge b-day12">Day 12h</span></span>
+    <span class="legend-item"><span class="badge b-night12">Night 12h</span></span>
+    <span class="legend-item"><span class="badge b-off">Off</span></span>
+    <span class="legend-item"><span class="badge b-holiday">Holiday</span></span>
+    <span class="legend-item"><span class="badge b-bh">Bank hol</span></span>
+    <span class="legend-item"><span class="badge b-overtime">OT</span></span>
+    <span class="legend-item"><span class="badge b-toil">TOIL</span></span>
+  </div>
+</div>
+
+<!-- PEOPLE -->
+<div id="tab-people" class="section">
+  <div class="panel">
+    <h3>Add person</h3>
+    <div class="row">
+      <div><label>Name</label><input type="text" id="pname" placeholder="Full name"/></div>
+      <div><label>Role</label><input type="text" id="prole" placeholder="e.g. Nurse" style="width:120px"/></div>
+      <div><label>Default shift</label>
+        <select id="pshift">
+          <option value="day">Day</option>
+          <option value="early">Early</option>
+          <option value="late">Late</option>
+          <option value="night">Night</option>
+          <option value="day12">Day 12h</option>
+          <option value="night12">Night 12h</option>
+        </select>
+      </div>
+      <div><label>Holiday days</label><input type="number" id="pallowance" value="28" min="0" max="60"/></div>
+    </div>
+    <div style="margin-top:.75rem">
+      <label style="margin-bottom:6px;display:block">Working days</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="add-days">
+        <span class="day-chip active" data-day="0">Mon</span>
+        <span class="day-chip active" data-day="1">Tue</span>
+        <span class="day-chip active" data-day="2">Wed</span>
+        <span class="day-chip active" data-day="3">Thu</span>
+        <span class="day-chip active" data-day="4">Fri</span>
+        <span class="day-chip" data-day="5">Sat</span>
+        <span class="day-chip" data-day="6">Sun</span>
+      </div>
+    </div>
+    <div style="margin-top:.75rem">
+      <button class="btn btn-primary" onclick="addPerson()"><i class="ti ti-plus"></i> Add person</button>
+    </div>
+  </div>
+  <div class="panel"><h3>Team</h3><div id="people-list"></div></div>
+</div>
+
+<!-- SHIFTS -->
+<div id="tab-shifts" class="section">
+  <div class="panel">
+    <h3>Built-in shift patterns</h3>
+    <div id="builtin-patterns"></div>
+  </div>
+  <div class="panel">
+    <h3><i class="ti ti-rotate-clockwise-2" style="font-size:15px;vertical-align:-2px"></i> 2 Earlies · 2 Lates · 2 Nights · 4 Days off</h3>
+    <p style="font-size:13px;color:#5f5e5a;margin-bottom:1rem">Set the times for each shift in this rotation, then save it as a named pattern.</p>
+    <div id="rot-222-form">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1rem;margin-bottom:1rem">
+        <div><label>Early start</label><input type="time" id="r-e-s" value="06:00" oninput="renderRotPreview()"/></div>
+        <div><label>Early end</label><input type="time" id="r-e-e" value="14:00" oninput="renderRotPreview()"/></div>
+        <div><label>Late start</label><input type="time" id="r-l-s" value="14:00" oninput="renderRotPreview()"/></div>
+        <div><label>Late end</label><input type="time" id="r-l-e" value="22:00" oninput="renderRotPreview()"/></div>
+        <div><label>Night start</label><input type="time" id="r-n-s" value="22:00" oninput="renderRotPreview()"/></div>
+        <div><label>Night end</label><input type="time" id="r-n-e" value="06:00" oninput="renderRotPreview()"/></div>
+      </div>
+      <div id="rot-preview-222"></div>
+      <div class="row" style="margin-top:.75rem">
+        <div><label>Pattern name</label><input type="text" id="r-222-name" value="2E·2L·2N·4off" style="width:180px"/></div>
+        <button class="btn btn-primary" onclick="saveRotPattern()"><i class="ti ti-device-floppy"></i> Save pattern</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3><i class="ti ti-rotate-clockwise-2" style="font-size:15px;vertical-align:-2px"></i> 4 Days on · 4 Days off (12-hour)</h3>
+    <p style="font-size:13px;color:#5f5e5a;margin-bottom:1rem">Choose day-only or day/night rotation, set your times, then save.</p>
+    <div style="display:flex;gap:8px;margin-bottom:1rem">
+      <button class="btn btn-sm" id="btn-d4" onclick="set4Mode('day')" style="border-color:#1a1a1a">Day shifts only</button>
+      <button class="btn btn-sm" id="btn-dn4" onclick="set4Mode('daynite')">Day + night</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1rem;margin-bottom:1rem">
+      <div><label>Day 12h start</label><input type="time" id="r-d12-s" value="07:00" oninput="render12Preview()"/></div>
+      <div><label>Day 12h end</label><input type="time" id="r-d12-e" value="19:00" oninput="render12Preview()"/></div>
+      <div id="n12-fields"><label>Night 12h start</label><input type="time" id="r-n12-s" value="19:00" oninput="render12Preview()"/></div>
+      <div id="n12-fields2"><label>Night 12h end</label><input type="time" id="r-n12-e" value="07:00" oninput="render12Preview()"/></div>
+    </div>
+    <div id="rot-preview-12"></div>
+    <div class="row" style="margin-top:.75rem">
+      <div><label>Pattern name</label><input type="text" id="r-12-name" value="4×12h·4off" style="width:180px"/></div>
+      <button class="btn btn-primary" onclick="save12Pattern()"><i class="ti ti-device-floppy"></i> Save pattern</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Add custom pattern</h3>
+    <div class="row">
+      <div><label>Name</label><input type="text" id="pat-name" placeholder="e.g. Split"/></div>
+      <div><label>Start</label><input type="time" id="pat-start"/></div>
+      <div><label>End</label><input type="time" id="pat-end"/></div>
+      <button class="btn btn-primary" onclick="addCustomPattern()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+  </div>
+  <div class="panel"><h3>Saved patterns</h3><div id="saved-patterns"></div></div>
+</div>
+
+<!-- HOLIDAYS -->
+<div id="tab-holidays" class="section">
+  <div class="panel">
+    <h3>Book holiday</h3>
+    <div class="row">
+      <div><label>Person</label><select id="hol-person" style="min-width:160px"></select></div>
+      <div><label>From</label><input type="date" id="hol-from"/></div>
+      <div><label>To</label><input type="date" id="hol-to"/></div>
+      <div><label>Notes</label><input type="text" id="hol-note" placeholder="Optional" style="width:120px"/></div>
+      <button class="btn btn-primary" onclick="addHoliday()"><i class="ti ti-plus"></i> Book</button>
+    </div>
+  </div>
+  <div class="panel"><h3>Holiday requests</h3><div id="hol-list"></div></div>
+  <div class="panel"><h3>Allowance summary</h3><div id="hol-summary"></div></div>
+</div>
+
+<!-- BANK HOLIDAYS -->
+<div id="tab-bh" class="section">
+  <div class="panel">
+    <h3>Bank holidays</h3>
+    <p style="font-size:13px;color:#5f5e5a;margin-bottom:1rem">UK bank holidays 2025–2026 pre-loaded. Add custom ones below.</p>
+    <div id="bh-list"></div>
+  </div>
+  <div class="panel">
+    <h3>Add bank holiday</h3>
+    <div class="row">
+      <div><label>Name</label><input type="text" id="bh-name" placeholder="e.g. Easter Monday"/></div>
+      <div><label>Date</label><input type="date" id="bh-date"/></div>
+      <button class="btn btn-primary" onclick="addBH()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- OVERTIME & TOIL -->
+<div id="tab-ot" class="section">
+  <div class="panel">
+    <h3>Log overtime or TOIL</h3>
+    <div class="row">
+      <div><label>Person</label><select id="ot-person" style="min-width:160px"></select></div>
+      <div><label>Date</label><input type="date" id="ot-date"/></div>
+      <div><label>Type</label>
+        <select id="ot-type"><option value="overtime">Overtime</option><option value="toil">TOIL taken</option></select>
+      </div>
+      <div><label>Hours</label><input type="number" id="ot-hours" value="2" min=".5" max="24" step=".5"/></div>
+      <div><label>Notes</label><input type="text" id="ot-note" placeholder="Optional" style="width:110px"/></div>
+      <button class="btn btn-primary" onclick="addOT()"><i class="ti ti-plus"></i> Log</button>
+    </div>
+  </div>
+  <div class="panel"><h3>Summary</h3><div id="ot-summary"></div></div>
+  <div class="panel"><h3>Log</h3><div id="ot-list"></div></div>
+</div>
+</div>
+
+<!-- SHIFT EDIT MODAL -->
+<div class="modal-overlay" id="shift-modal">
+  <div class="modal">
+    <h3>Edit shift</h3>
+    <p style="font-size:13px;color:#5f5e5a;margin-bottom:1rem" id="modal-info"></p>
+    <div class="fg"><label>Type</label>
+      <select id="modal-type" style="width:100%" onchange="mtypeChange()">
+        <option value="shift">Shift</option>
+        <option value="holiday">Holiday</option>
+        <option value="off">Off</option>
+      </select>
+    </div>
+    <div id="modal-shift-row" class="fg"><label>Shift</label>
+      <select id="modal-shift" style="width:100%">
+        <option value="early">Early</option>
+        <option value="day">Day</option>
+        <option value="late">Late</option>
+        <option value="night">Night</option>
+        <option value="day12">Day 12h</option>
+        <option value="night12">Night 12h</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-primary" onclick="saveShift()">Save</button>
+      <button class="btn" onclick="closeMod()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_SHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const AVATARCOLS=['#E1F5EE:#085041','#E6F1FB:#0C447C','#FAEEDA:#633806','#EEEDFE:#3C3489','#FAECE7:#4A1B0C','#EAF3DE:#173404','#FCEBEB:#791F1F','#CEEBFC:#044566'];
+const LS_KEY='rota_v3';
+
+const SHIFT_META={
+  early:{label:'Early',cls:'b-early',short:'E'},
+  day:{label:'Day',cls:'b-day',short:'D'},
+  late:{label:'Late',cls:'b-late',short:'L'},
+  night:{label:'Night',cls:'b-night',short:'N'},
+  day12:{label:'Day 12h',cls:'b-day12',short:'D12'},
+  night12:{label:'Night 12h',cls:'b-night12',short:'N12'},
+  off:{label:'Off',cls:'b-off',short:'Off'},
+  holiday:{label:'Holiday',cls:'b-holiday',short:'Hol'},
+  bh:{label:'Bank hol',cls:'b-bh',short:'BH'},
+};
+
+const DEFAULT_BH=[
+  {id:'bh1',name:"New Year's Day",date:'2025-01-01'},
+  {id:'bh2',name:'Good Friday',date:'2025-04-18'},
+  {id:'bh3',name:'Easter Monday',date:'2025-04-21'},
+  {id:'bh4',name:'Early May bank holiday',date:'2025-05-05'},
+  {id:'bh5',name:'Spring bank holiday',date:'2025-05-26'},
+  {id:'bh6',name:'Summer bank holiday',date:'2025-08-25'},
+  {id:'bh7',name:'Christmas Day',date:'2025-12-25'},
+  {id:'bh8',name:'Boxing Day',date:'2025-12-26'},
+  {id:'bh9',name:"New Year's Day",date:'2026-01-01'},
+  {id:'bh10',name:'Good Friday',date:'2026-04-03'},
+  {id:'bh11',name:'Easter Monday',date:'2026-04-06'},
+  {id:'bh12',name:'Early May bank holiday',date:'2026-05-04'},
+  {id:'bh13',name:'Spring bank holiday',date:'2026-05-25'},
+  {id:'bh14',name:'Summer bank holiday',date:'2026-08-31'},
+  {id:'bh15',name:'Christmas Day',date:'2026-12-25'},
+  {id:'bh16',name:'Boxing Day',date:'2026-12-28'},
+];
+
+let S={
+  people:[
+    {id:1,name:'Alice Johnson',role:'Manager',shift:'day',workDays:[0,1,2,3,4],color:0,allowance:28},
+    {id:2,name:'Ben Carter',role:'Staff',shift:'early',workDays:[1,2,3,4,5],color:1,allowance:25},
+    {id:3,name:'Sara Malik',role:'Staff',shift:'late',workDays:[0,2,4,5,6],color:2,allowance:25},
+  ],
+  patterns:[
+    {id:'early',name:'Early',start:'06:00',end:'14:00',builtin:true},
+    {id:'day',name:'Day',start:'09:00',end:'17:00',builtin:true},
+    {id:'late',name:'Late',start:'14:00',end:'22:00',builtin:true},
+    {id:'night',name:'Night',start:'22:00',end:'06:00',builtin:true},
+    {id:'day12',name:'Day 12h',start:'07:00',end:'19:00',builtin:true},
+    {id:'night12',name:'Night 12h',start:'19:00',end:'07:00',builtin:true},
+  ],
+  overrides:{},
+  holidays:[],
+  bankHols:[...DEFAULT_BH],
+  otLog:[],
+  nid:4,holNid:1,otNid:1,bhNid:20,patNid:10,
+};
+
+let weekOff=0;
+let calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth();
+let editTarget=null;
+let mode4='day';
+let saveTimer=null;
+let currentTab='cal';
+
+function loadState(){
+  try{const r=localStorage.getItem(LS_KEY);if(r)S=Object.assign({},S,JSON.parse(r));}catch(e){}
+}
+function saveState(){
+  clearTimeout(saveTimer);
+  document.getElementById('save-text').textContent='Saving…';
+  saveTimer=setTimeout(()=>{
+    try{localStorage.setItem(LS_KEY,JSON.stringify(S));document.getElementById('save-text').textContent='All changes saved';}
+    catch(e){document.getElementById('save-text').textContent='Save failed';}
+  },600);
+}
+
+function isoDate(d){return d.toISOString().slice(0,10)}
+function fmt(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
+function fmtFull(s){const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+function timeDiff(s,e){
+  const[sh,sm]=s.split(':').map(Number);const[eh,em]=e.split(':').map(Number);
+  let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;return d/60;
+}
+
+function isBH(ds){return S.bankHols.some(b=>b.date===ds)}
+function getBHName(ds){const b=S.bankHols.find(x=>x.date===ds);return b?b.name:''}
+function isOnHol(pid,ds){return S.holidays.some(h=>h.personId===pid&&h.status!=='cancelled'&&ds>=h.from&&ds<=h.to)}
+function getOTs(pid,ds){return S.otLog.filter(o=>o.personId===pid&&o.date===ds)}
+
+function getWeekStart(off){
+  const n=new Date();const day=n.getDay();
+  const diff=day===0?-6:1-day;
+  const m=new Date(n);m.setDate(n.getDate()+diff+off*7);m.setHours(0,0,0,0);return m;
+}
+
+function getCellState(person,ds,dayIdx){
+  const ots=getOTs(person.id,ds);
+  const ov=S.overrides[`${person.id}_${ds}`];
+  if(ov!==undefined){
+    if(ov==='holiday')return{type:'holiday',ds,ots};
+    if(ov==='off')return{type:'off',ds,ots};
+    return{type:'shift',shift:ov,ds,ots};
+  }
+  if(isOnHol(person.id,ds))return{type:'holiday',ds,ots};
+  if(isBH(ds))return{type:'bh',ds,ots};
+  if(dayIdx!==undefined&&!person.workDays.includes(dayIdx))return{type:'off',ds,ots};
+  if(dayIdx===undefined){
+    const d=new Date(ds+'T00:00:00');const dow=(d.getDay()+6)%7;
+    if(!person.workDays.includes(dow))return{type:'off',ds,ots};
+  }
+  return{type:'shift',shift:person.shift,ds,ots};
+}
+
+function shiftBadgeHtml(state,compact){
+  let h='';
+  if(state.type==='holiday')h+=`<span class="badge b-holiday">${compact?'Hol':'Holiday'}</span>`;
+  else if(state.type==='bh')h+=`<span class="badge b-bh">${compact?'BH':'Bank hol'}</span>`;
+  else if(state.type==='off')h+=`<span class="badge b-off">Off</span>`;
+  else{const m=SHIFT_META[state.shift]||{label:state.shift,cls:'b-day',short:'?'};h+=`<span class="badge ${m.cls}">${compact?m.short:m.label}</span>`;}
+  if(state.ots&&state.ots.length)state.ots.forEach(o=>{h+=`<br><span class="badge ${o.type==='overtime'?'b-overtime':'b-toil'}" style="margin-top:2px">${o.type==='overtime'?'OT':'TOIL'} ${o.hours}h</span>`;});
+  return h;
+}
+
+/* ========= CALENDAR ========= */
+function renderCal(){
+  const filter=document.getElementById('cal-filter').value;
+  const headerEl=document.getElementById('cal-header');
+  const gridEl=document.getElementById('cal-grid');
+  document.getElementById('cal-month-label').textContent=`${MONTH_NAMES[calMonth]} ${calYear}`;
+
+  headerEl.innerHTML=DAY_SHORT.map(d=>`<div class="cal-header-cell">${d}</div>`).join('');
+
+  const firstDay=new Date(calYear,calMonth,1);
+  const lastDay=new Date(calYear,calMonth+1,0);
+  const startDow=(firstDay.getDay()+6)%7;
+  const today=isoDate(new Date());
+
+  const cells=[];
+  for(let i=0;i<startDow;i++){
+    const d=new Date(firstDay);d.setDate(d.getDate()-(startDow-i));cells.push({date:d,other:true});
+  }
+  for(let i=1;i<=lastDay.getDate();i++)cells.push({date:new Date(calYear,calMonth,i),other:false});
+  const rem=cells.length%7===0?0:7-(cells.length%7);
+  for(let i=1;i<=rem;i++){const d=new Date(lastDay);d.setDate(d.getDate()+i);cells.push({date:d,other:true});}
+
+  gridEl.innerHTML=cells.map(cell=>{
+    const ds=isoDate(cell.date);
+    const bh=isBH(ds);
+    const bhName=bh?getBHName(ds):'';
+    const isToday=ds===today;
+    let cls='cal-day';
+    if(cell.other)cls+=' other-month';
+    if(isToday)cls+=' today';
+    if(bh)cls+=' is-bh';
+
+    const peoplToShow=filter==='all'?S.people:S.people.filter(p=>p.id===parseInt(filter));
+    const badges=peoplToShow.map(p=>{
+      const state=getCellState(p,ds);
+      if(state.type==='off'&&filter==='all')return'';
+      const m=SHIFT_META[state.type==='shift'?state.shift:state.type]||SHIFT_META.off;
+      const [bg,fg]=AVATARCOLS[p.color%AVATARCOLS.length].split(':');
+      const name=filter==='all'?`<b style="color:${fg};margin-right:3px">${p.name.split(' ')[0]}</b>`:'';
+      return `<div class="cal-badge ${m.cls}" style="background:${m.cls==='b-off'?'#F1EFE8':''}">${name}${m.short}${state.ots&&state.ots.length?' +OT':''}</div>`;
+    }).join('');
+
+    const bhHtml=bh?`<div class="cal-bh-label">${bhName}</div>`:'';
+    const numCls=cell.other?'cal-day-num other-month-num':'cal-day-num';
+    return `<div class="${cls}" onclick="calDayClick('${ds}')">
+      <div class="${numCls}"><span>${cell.date.getDate()}</span>${isToday?'<span style="font-size:9px;background:#1a1a1a;color:#fff;border-radius:10px;padding:1px 5px">today</span>':''}</div>
+      ${bhHtml}
+      <div class="cal-badges">${badges}</div>
+    </div>`;
+  }).join('');
+}
+
+function calPrev(){if(calMonth===0){calMonth=11;calYear--;}else calMonth--;renderCal();}
+function calNext(){if(calMonth===11){calMonth=0;calYear++;}else calMonth++;renderCal();}
+function calToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCal();}
+function calDayClick(ds){
+  if(!S.people.length)return;
+  const filter=document.getElementById('cal-filter').value;
+  if(filter!=='all'){
+    const p=S.people.find(x=>x.id===parseInt(filter));
+    if(p)openMod(p.id,ds);
+  }
+}
+
+/* ========= WEEK VIEW ========= */
+function renderRota(){
+  const ws=getWeekStart(weekOff);const we=new Date(ws);we.setDate(ws.getDate()+6);
+  document.getElementById('wlabel').textContent=`${fmt(ws)} – ${fmt(we)}`;
+  if(!S.people.length){document.getElementById('rota-grid').innerHTML='<p class="empty">No people added yet.</p>';return;}
+  const headers=DAYS.map((d,i)=>{
+    const dt=new Date(ws);dt.setDate(ws.getDate()+i);const ds=isoDate(dt);const bh=isBH(ds);
+    return `<th style="${bh?'color:#a32d2d':''}">${d}<br><span style="font-weight:400;color:#888780;font-size:11px">${dt.getDate()}${bh?'*':''}</span></th>`;
+  }).join('');
+  const rows=S.people.map(p=>{
+    const [bg,fg]=AVATARCOLS[p.color%AVATARCOLS.length].split(':');
+    const init=p.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+    const cells=DAYS.map((_,i)=>{
+      const dt=new Date(ws);dt.setDate(ws.getDate()+i);const ds=isoDate(dt);
+      const state=getCellState(p,ds,i);
+      return `<td class="dcell" onclick="openMod(${p.id},'${ds}')">${shiftBadgeHtml(state,false)}</td>`;
+    }).join('');
+    return `<tr><td><div class="person-cell"><div class="avatar" style="background:${bg};color:${fg}">${init}</div><div><div style="font-weight:500;font-size:13px">${p.name}</div><div style="font-size:11px;color:#888780">${p.role}</div></div></div></td>${cells}</tr>`;
+  }).join('');
+  document.getElementById('rota-grid').innerHTML=`<table class="rota-tbl"><thead><tr><th></th>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function cw(dir,reset){weekOff=reset?0:weekOff+dir;renderRota();}
+
+/* ========= PEOPLE ========= */
+function workingDays(from,to,workDays){
+  let c=0;const cur=new Date(from+'T00:00:00');const end=new Date(to+'T00:00:00');
+  while(cur<=end){const dow=(cur.getDay()+6)%7;if(workDays.includes(dow)&&!isBH(isoDate(cur)))c++;cur.setDate(cur.getDate()+1);}
+  return c;
+}
+function usedHols(pid){
+  return S.holidays.filter(h=>h.personId===pid&&h.status==='approved').reduce((s,h)=>{
+    const p=S.people.find(x=>x.id===pid);return s+(p?workingDays(h.from,h.to,p.workDays):0);
+  },0);
+}
+
+function renderPeople(){
+  populateSelects();
+  const el=document.getElementById('people-list');
+  if(!S.people.length){el.innerHTML='<p class="empty">No team members yet.</p>';return;}
+  el.innerHTML=S.people.map(p=>{
+    const [bg,fg]=AVATARCOLS[p.color%AVATARCOLS.length].split(':');
+    const init=p.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+    const chips=DAYS.map((d,i)=>`<span style="padding:2px 7px;border-radius:20px;font-size:11px;border:1px solid #e5e5e3;background:${p.workDays.includes(i)?bg:'transparent'};color:${p.workDays.includes(i)?fg:'#888780'}">${d}</span>`).join('');
+    const used=usedHols(p.id);const sm=SHIFT_META[p.shift]||{label:p.shift,cls:'b-day'};
+    return `<div class="list-row"><div class="person-cell" style="gap:10px;flex:1;min-width:0"><div class="avatar" style="background:${bg};color:${fg};width:36px;height:36px">${init}</div><div style="min-width:0"><div style="font-weight:500;font-size:14px">${p.name}</div><div style="font-size:12px;color:#888780;margin-bottom:5px">${p.role} · <span class="badge ${sm.cls}">${sm.label}</span> · ${used}/${p.allowance} days holiday</div><div style="display:flex;gap:4px;flex-wrap:wrap">${chips}</div></div></div><button class="btn btn-sm btn-danger" onclick="removePerson(${p.id})"><i class="ti ti-trash"></i></button></div>`;
+  }).join('');
+}
+
+function addPerson(){
+  const name=document.getElementById('pname').value.trim();
+  const role=document.getElementById('prole').value.trim()||'Staff';
+  const shift=document.getElementById('pshift').value;
+  const allowance=parseInt(document.getElementById('pallowance').value)||28;
+  if(!name)return;
+  const chips=document.querySelectorAll('#add-days .day-chip');
+  const workDays=[...chips].filter(c=>c.classList.contains('active')).map(c=>+c.dataset.day);
+  S.people.push({id:S.nid++,name,role,shift,workDays,color:S.people.length,allowance});
+  document.getElementById('pname').value='';document.getElementById('prole').value='';
+  saveState();renderAll();
+}
+function removePerson(id){
+  if(!confirm('Remove this person?'))return;
+  S.people=S.people.filter(p=>p.id!==id);
+  S.holidays=S.holidays.filter(h=>h.personId!==id);
+  S.otLog=S.otLog.filter(o=>o.personId!==id);
+  saveState();renderAll();
+}
+
+/* ========= SHIFT PATTERNS ========= */
+function getShiftColor(id){
+  const colors={early:'b-early',day:'b-day',late:'b-late',night:'b-night',day12:'b-day12',night12:'b-night12',off:'b-off'};
+  return colors[id]||'b-day';
+}
+const RDAY_COLORS={
+  early:{bg:'#E1F5EE',color:'#085041'},late:{bg:'#FAEEDA',color:'#633806'},
+  night:{bg:'#EEEDFE',color:'#3C3489'},day12:{bg:'#CEEBFC',color:'#044566'},
+  night12:{bg:'#D8D5F8',color:'#2D2880'},off:{bg:'#F1EFE8',color:'#5F5E5A'},
+};
+function rdayHtml(type,label,dayNum){
+  const c=RDAY_COLORS[type]||RDAY_COLORS.off;
+  return `<div class="rday"><div class="rday-label">D${dayNum}</div><div class="rday-block" style="background:${c.bg};color:${c.color}">${label}</div></div>`;
+}
+
+function renderRotPreview(){
+  const rot=['early','early','late','late','night','night','off','off','off','off'];
+  const labels={early:'E',late:'L',night:'N',off:'Off'};
+  const strip=rot.map((s,i)=>rdayHtml(s,labels[s]||s,i+1)).join('');
+  document.getElementById('rot-preview-222').innerHTML=`<div class="rotation-strip">${strip}</div>`;
+}
+
+function render12Preview(){
+  const rot=mode4==='day'
+    ?['day12','day12','day12','day12','off','off','off','off']
+    :['day12','day12','night12','night12','off','off','off','off'];
+  const labels={day12:'D12',night12:'N12',off:'Off'};
+  const strip=rot.map((s,i)=>rdayHtml(s,labels[s]||s,i+1)).join('');
+  document.getElementById('rot-preview-12').innerHTML=`<div class="rotation-strip">${strip}</div>`;
+}
+
+function set4Mode(m){
+  mode4=m;
+  document.getElementById('btn-d4').style.borderColor=m==='day'?'#1a1a1a':'#d3d1c7';
+  document.getElementById('btn-dn4').style.borderColor=m==='daynite'?'#1a1a1a':'#d3d1c7';
+  const show=m==='daynite';
+  document.getElementById('n12-fields').style.display=show?'':'none';
+  document.getElementById('n12-fields2').style.display=show?'':'none';
+  render12Preview();
+}
+
+function renderBuiltinPatterns(){
+  const builtins=S.patterns.filter(p=>p.builtin);
+  document.getElementById('builtin-patterns').innerHTML=builtins.map(p=>`<div class="list-row"><div style="display:flex;align-items:center;gap:10px"><span class="badge ${getShiftColor(p.id)}">${p.name}</span><span style="font-size:13px;color:#888780">${p.start} – ${p.end}</span></div><span style="font-size:11px;color:#b4b2a9">built-in</span></div>`).join('');
+}
+
+function renderSavedPatterns(){
+  const custom=S.patterns.filter(p=>!p.builtin);
+  const el=document.getElementById('saved-patterns');
+  if(!custom.length){el.innerHTML='<p class="empty" style="padding:1rem">No custom patterns saved yet.</p>';return;}
+  el.innerHTML=custom.map(p=>`<div class="list-row"><div><div style="font-weight:500;font-size:13px">${p.name}</div><div style="font-size:12px;color:#888780">${p.description||''}</div></div><button class="btn btn-sm btn-danger" onclick="removePattern('${p.id}')"><i class="ti ti-trash"></i></button></div>`).join('');
+}
+
+function saveRotPattern(){
+  const name=document.getElementById('r-222-name').value.trim()||'2E·2L·2N·4off';
+  const es=document.getElementById('r-e-s').value;const ee=document.getElementById('r-e-e').value;
+  const ls=document.getElementById('r-l-s').value;const le=document.getElementById('r-l-e').value;
+  const ns=document.getElementById('r-n-s').value;const ne=document.getElementById('r-n-e').value;
+  S.patterns.push({id:'rot_'+S.patNid++,name,builtin:false,
+    description:`Early ${es}–${ee} · Late ${ls}–${le} · Night ${ns}–${ne} · Rotation: 2E 2L 2N 4off`,
+    rotation:'early,early,late,late,night,night,off,off,off,off',
+    times:{early:{start:es,end:ee},late:{start:ls,end:le},night:{start:ns,end:ne}}});
+  S.patterns=S.patterns.map(p=>{
+    if(p.id==='early'&&es)p.start=es,p.end=ee;
+    if(p.id==='late'&&ls)p.start=ls,p.end=le;
+    if(p.id==='night'&&ns)p.start=ns,p.end=ne;
+    return p;
+  });
+  saveState();renderBuiltinPatterns();renderSavedPatterns();alert('Pattern saved! Shift times updated.');
+}
+
+function save12Pattern(){
+  const name=document.getElementById('r-12-name').value.trim()||'4×12h·4off';
+  const ds=document.getElementById('r-d12-s').value;const de=document.getElementById('r-d12-e').value;
+  const ns=document.getElementById('r-n12-s').value;const ne=document.getElementById('r-n12-e').value;
+  S.patterns=S.patterns.map(p=>{
+    if(p.id==='day12'){p.start=ds;p.end=de;}
+    if(p.id==='night12'&&mode4==='daynite'){p.start=ns;p.end=ne;}
+    return p;
+  });
+  const desc=mode4==='day'?`Day 12h ${ds}–${de} · 4 on 4 off`:`Day 12h ${ds}–${de} · Night 12h ${ns}–${ne} · 4 on 4 off`;
+  S.patterns.push({id:'h12_'+S.patNid++,name,builtin:false,description:desc,rotation:mode4==='day'?'day12,day12,day12,day12,off,off,off,off':'day12,day12,night12,night12,off,off,off,off'});
+  saveState();renderBuiltinPatterns();renderSavedPatterns();alert('Pattern saved! 12h shift times updated.');
+}
+
+function addCustomPattern(){
+  const name=document.getElementById('pat-name').value.trim();
+  const start=document.getElementById('pat-start').value;
+  const end=document.getElementById('pat-end').value;
+  if(!name||!start||!end)return;
+  S.patterns.push({id:'c_'+S.patNid++,name,start,end,builtin:false,description:`${start}–${end}`});
+  document.getElementById('pat-name').value='';document.getElementById('pat-start').value='';document.getElementById('pat-end').value='';
+  saveState();renderSavedPatterns();
+}
+function removePattern(id){S.patterns=S.patterns.filter(p=>p.id!==id);saveState();renderSavedPatterns();}
+
+/* ========= HOLIDAYS ========= */
+function renderHolidays(){
+  const el=document.getElementById('hol-list');
+  if(!S.holidays.length){el.innerHTML='<p class="empty">No holidays booked yet.</p>';}
+  else el.innerHTML=S.holidays.map(h=>{
+    const p=S.people.find(x=>x.id===h.personId);if(!p)return'';
+    const days=workingDays(h.from,h.to,p.workDays);
+    return `<div class="list-row"><div style="flex:1;min-width:0"><div style="font-weight:500;font-size:13px">${p.name}</div><div style="font-size:12px;color:#888780">${fmtFull(h.from)} – ${fmtFull(h.to)} · ${days} day${days!==1?'s':''} ${h.note?'· '+h.note:''}</div></div><div style="display:flex;gap:6px;align-items:center;flex-shrink:0"><span class="badge b-${h.status}">${h.status}</span>${h.status==='pending'?`<button class="btn btn-sm btn-success" onclick="approveHol('${h.id}')"><i class="ti ti-check"></i></button>`:''}<button class="btn btn-sm btn-danger" onclick="cancelHol('${h.id}')"><i class="ti ti-x"></i></button></div></div>`;
+  }).join('');
+  document.getElementById('hol-summary').innerHTML=S.people.map(p=>{
+    const used=usedHols(p.id);const rem=p.allowance-used;const pct=Math.min(100,Math.round(used/p.allowance*100));
+    return `<div class="list-row"><div style="flex:1"><div style="font-weight:500;font-size:13px">${p.name}</div><div style="font-size:12px;color:#888780">${used} used · <strong>${rem}</strong> remaining of ${p.allowance}</div></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${rem<3?'#e24b4a':'#639922'}"></div></div></div>`;
+  }).join('');
+}
+
+function addHoliday(){
+  const pid=parseInt(document.getElementById('hol-person').value);
+  const from=document.getElementById('hol-from').value;
+  const to=document.getElementById('hol-to').value;
+  const note=document.getElementById('hol-note').value.trim();
+  if(!pid||!from||!to||from>to)return;
+  const p=S.people.find(x=>x.id===pid);
+  const days=p?workingDays(from,to,p.workDays):0;
+  const used=usedHols(pid);
+  if(p&&used+days>p.allowance){if(!confirm(`Warning: only ${p.allowance-used} days remaining. Book anyway?`))return;}
+  S.holidays.push({id:'h'+S.holNid++,personId:pid,from,to,note,status:'pending'});
+  document.getElementById('hol-from').value='';document.getElementById('hol-to').value='';document.getElementById('hol-note').value='';
+  saveState();renderHolidays();renderCal();renderRota();
+}
+function approveHol(id){const h=S.holidays.find(x=>x.id===id);if(h){h.status='approved';saveState();renderHolidays();renderCal();renderRota();}}
+function cancelHol(id){const h=S.holidays.find(x=>x.id===id);if(h){h.status='cancelled';saveState();renderHolidays();renderCal();renderRota();}}
+
+/* ========= BANK HOLIDAYS ========= */
+function renderBH(){
+  const sorted=[...S.bankHols].sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('bh-list').innerHTML=sorted.map(b=>`<div class="list-row"><div><div style="font-weight:500;font-size:13px">${b.name}</div><div class="bh-date-txt">${fmtFull(b.date)}</div></div>${parseInt(b.id.replace(/\D/g,''))<=16?'<span style="font-size:11px;color:#b4b2a9">UK built-in</span>':`<button class="btn btn-sm btn-danger" onclick="removeBH('${b.id}')"><i class="ti ti-trash"></i></button>`}</div>`).join('');
+}
+function addBH(){
+  const name=document.getElementById('bh-name').value.trim();const date=document.getElementById('bh-date').value;
+  if(!name||!date)return;
+  S.bankHols.push({id:'cbh'+S.bhNid++,name,date});
+  document.getElementById('bh-name').value='';document.getElementById('bh-date').value='';
+  saveState();renderBH();renderCal();renderRota();
+}
+function removeBH(id){S.bankHols=S.bankHols.filter(b=>b.id!==id);saveState();renderBH();renderCal();renderRota();}
+
+/* ========= OVERTIME & TOIL ========= */
+function renderOT(){
+  document.getElementById('ot-summary').innerHTML=`<div class="stat-grid">${S.people.map(p=>{
+    const otH=S.otLog.filter(o=>o.personId===p.id&&o.type==='overtime').reduce((s,o)=>s+o.hours,0);
+    const tH=S.otLog.filter(o=>o.personId===p.id&&o.type==='toil').reduce((s,o)=>s+o.hours,0);
+    const bal=+(otH-tH).toFixed(1);
+    return `<div class="stat"><div class="stat-label">${p.name}</div><div class="stat-val"><span style="color:#3b6d11">+${otH}h OT</span> · <span style="color:#185fa5">${tH}h TOIL</span><br><span style="font-size:13px;color:#888780">Balance: ${bal>=0?'+':''}${bal}h</span></div></div>`;
+  }).join('')}</div>`;
+  const el=document.getElementById('ot-list');
+  if(!S.otLog.length){el.innerHTML='<p class="empty">No entries yet.</p>';return;}
+  el.innerHTML=[...S.otLog].sort((a,b)=>b.date.localeCompare(a.date)).map(o=>{
+    const p=S.people.find(x=>x.id===o.personId);
+    return `<div class="list-row"><div><div style="font-weight:500;font-size:13px">${p?p.name:'?'} <span class="badge ${o.type==='overtime'?'b-overtime':'b-toil'}">${o.type==='overtime'?'Overtime':'TOIL'}</span></div><div style="font-size:12px;color:#888780">${fmtFull(o.date)} · ${o.hours}h${o.note?' · '+o.note:''}</div></div><button class="btn btn-sm btn-danger" onclick="removeOT('${o.id}')"><i class="ti ti-trash"></i></button></div>`;
+  }).join('');
+}
+function addOT(){
+  const pid=parseInt(document.getElementById('ot-person').value);
+  const date=document.getElementById('ot-date').value;
+  const type=document.getElementById('ot-type').value;
+  const hours=parseFloat(document.getElementById('ot-hours').value);
+  const note=document.getElementById('ot-note').value.trim();
+  if(!pid||!date||!hours)return;
+  S.otLog.push({id:'ot'+S.otNid++,personId:pid,date,type,hours,note});
+  document.getElementById('ot-date').value='';document.getElementById('ot-note').value='';
+  saveState();renderOT();renderCal();renderRota();
+}
+function removeOT(id){S.otLog=S.otLog.filter(o=>o.id!==id);saveState();renderOT();renderCal();renderRota();}
+
+/* ========= SELECTS & MODAL ========= */
+function populateSelects(){
+  const calSel=document.getElementById('cal-filter');
+  const cur=calSel.value;
+  calSel.innerHTML='<option value="all">All people</option>'+S.people.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  if(cur)calSel.value=cur;
+
+  ['hol-person','ot-person'].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    const v=sel.value;
+    sel.innerHTML=S.people.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    if(v)sel.value=v;
+  });
+
+  const ms=document.getElementById('modal-shift');
+  if(ms){
+    const existing=[...ms.options].map(o=>o.value);
+    S.patterns.filter(p=>!p.builtin&&!existing.includes(p.id)).forEach(p=>{
+      const o=document.createElement('option');o.value=p.id;o.textContent=p.name;ms.appendChild(o);
+    });
+  }
+}
+
+function openMod(pid,ds){
+  const p=S.people.find(x=>x.id===pid);if(!p)return;
+  editTarget={pid,ds};
+  const d=new Date(ds+'T00:00:00');
+  document.getElementById('modal-info').textContent=`${p.name} · ${d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}`;
+  const ov=S.overrides[`${pid}_${ds}`];
+  const type=ov==='holiday'?'holiday':ov==='off'?'off':'shift';
+  document.getElementById('modal-type').value=type;
+  if(type==='shift')document.getElementById('modal-shift').value=ov||p.shift;
+  mtypeChange();
+  document.getElementById('shift-modal').classList.add('open');
+}
+function mtypeChange(){document.getElementById('modal-shift-row').style.display=document.getElementById('modal-type').value==='shift'?'':'none';}
+function closeMod(){document.getElementById('shift-modal').classList.remove('open');editTarget=null;}
+function saveShift(){
+  if(!editTarget)return;
+  const{pid,ds}=editTarget;const key=`${pid}_${ds}`;
+  const type=document.getElementById('modal-type').value;
+  if(type==='shift')S.overrides[key]=document.getElementById('modal-shift').value;
+  else S.overrides[key]=type;
+  saveState();closeMod();renderRota();renderCal();
+}
+document.getElementById('shift-modal').addEventListener('click',function(e){if(e.target===this)closeMod();});
+
+/* ========= NAV ========= */
+function sw(name){
+  const tabs=['cal','rota','people','shifts','holidays','bh','ot'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  currentTab=name;
+}
+
+function renderAll(){
+  renderCal();renderRota();renderPeople();
+  renderBuiltinPatterns();renderSavedPatterns();
+  renderHolidays();renderBH();renderOT();
+}
+
+/* ========= INIT ========= */
+document.querySelectorAll('#add-days .day-chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('active')));
+
+loadState();
+set4Mode('day');
+renderRotPreview();
+renderAll();
+</script>
+</body>
+</html>
